@@ -16,6 +16,8 @@ dependencies = [
 name = "SolTokenTerminal"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "serde_json",
  "solana-client",
  "solana-sdk",
  "spl-associated-token-account",
