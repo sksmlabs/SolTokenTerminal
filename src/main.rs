@@ -1,3 +1,4 @@
-fn main() {
-    println!("Hello, world!");
+[tokio::main]
+async fn main() {
+    println!("\n======== Creating connecting to local Solana RPC ========");
 }

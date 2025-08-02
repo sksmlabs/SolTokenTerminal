@@ -22,6 +22,7 @@ dependencies = [
  "spl-token-client",
  "spl-token-confidential-transfer-proof-extraction 0.4.0",
  "spl-token-confidential-transfer-proof-generation",
+ "tokio",
 ]
 
 [[package]]
