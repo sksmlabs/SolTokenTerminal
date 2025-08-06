@@ -1,14 +1,15 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result, Error};
 use serde_json;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::system_instruction;
-use solana_sdk::signature::{Keypair, Signer};
+use solana_sdk::signature::{Keypair, Signer, read_keypair_file};
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::transaction::Transaction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::commitment_config::CommitmentConfig;
 use std::fs;
 use std::{thread::sleep, time::Duration};
+use std::path::PathBuf;
 
 pub fn keypair_gen(client: &RpcClient) -> Result<Keypair> {
     let keypair = Keypair::new();
@@ -30,6 +31,19 @@ pub fn keypair_gen(client: &RpcClient) -> Result<Keypair> {
 
     Ok(keypair)
 }
+
+pub fn load_local_keypair() -> Result<solana_sdk::signature::Keypair> {
+    let path: PathBuf = dirs::home_dir()
+        .expect("Home directory not found")
+        .join(".config/solana/id.json");
+
+    // 💥 FIX: Dereference the boxed error with `*e`
+    let keypair = read_keypair_file(path).map_err(|e| anyhow!("{}", e))?;
+    println!{"local: {}", keypair.pubkey()};
+    
+    Ok(keypair)
+}
+
 
 pub fn load_keypair_from_file(path: &str) -> Result<Keypair> {
     let file_content = fs::read_to_string(path)?;
@@ -69,7 +83,7 @@ pub fn airdrop_to(client: &RpcClient, acc_pubkey: &Pubkey, amount_sol: f64) -> R
     Ok(sol)
 }  
 
-pub fn transfer_to(client: &RpcClient, from: &Keypair, to: &Pubkey, amount_sol: f64) -> Result<()> {
+pub fn transfer_to(client: &RpcClient, payer: &Keypair, from: &Keypair, to: &Pubkey, amount_sol: f64) -> Result<()> {
     println!("\n");
 
     let blockhash = client.get_latest_blockhash()?;
@@ -79,8 +93,8 @@ pub fn transfer_to(client: &RpcClient, from: &Keypair, to: &Pubkey, amount_sol: 
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction], 
-        Some(&from.pubkey()),
-        &[from], 
+        Some(&payer.pubkey()),
+        &[payer, from], 
         blockhash,
     );
 

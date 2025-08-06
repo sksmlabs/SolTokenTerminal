@@ -1,20 +1,23 @@
 mod helpers;
 
-use anyhow::Result;
-use helpers::{keypair_gen, load_keypair_from_file, lamports_to_sol, airdrop_to, transfer_to};
+use anyhow::{anyhow, Result, Error};
+use helpers::{keypair_gen, load_local_keypair, load_keypair_from_file, airdrop_to, transfer_to};
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::signature::Signer;
+use solana_sdk::signature::{Signer};
 use std::env;
+
 
 // command: cargo run -- src/config/ajay_keypair.json src/config/bjay_keypair.json
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    println!("\n======== Creating connecting to local Solana RPC ========");
+    println!("\n======== Creating connection to local Solana RPC ========");
 
     let rpc_url = "http://127.0.0.1:8899";
     let rpc_client = RpcClient::new(rpc_url.to_string());
     println!("\nConnected to Solana RPC at localhost:8899");
+
+    let local = load_local_keypair()?;
 
     let args: Vec<String> = env::args().collect();
 
@@ -58,7 +61,7 @@ async fn main() -> Result<()> {
 
     println!("Balances -> ajay: {ajay_sol} SOL, bjay: {bjay_sol} SOL");
 
-    // transfer_to(&rpc_client, &ajay, &bjay.pubkey(), 1.0);
+    // transfer_to(&rpc_client, &local, &ajay, &bjay.pubkey(), 1.0);
 
     Ok(())
 }
