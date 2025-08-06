@@ -1,10 +1,12 @@
 mod helpers;
 
 use anyhow::Result;
+use helpers::{keypair_gen, load_keypair_from_file, lamports_to_sol, get_balance_or_airdrop_to};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::signature::Signer;
 use std::env;
-use helpers::{keypair_gen, load_keypair_from_file};
+
+// command: cargo run -- src/config/ajay_keypair.json src/config/bjay_keypair.json
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,14 +17,15 @@ async fn main() -> Result<()> {
     println!("\nConnected to Solana RPC at localhost:8899");
 
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() > 1 && (args[1] == "--help" || args[1] == "-h") {
         println!("Usage: {} [ajay_keypair_file] [bjay_keypair_file]", args[0]);
+
         println!("  If no arguments provided: generates new funded keypairs");
         println!("  If 2 arguments provided: loads keypairs from the specified files");
         return Ok(());
     }
-    
+
     let (ajay, bjay) = if args.len() == 3 {
         // Load keypairs from CLI arguments
         println!("\n======== Loading Keypairs from CLI Arguments ========");
@@ -36,13 +39,24 @@ async fn main() -> Result<()> {
         println!("\n======== Generating Funded Keypairs for Ajay and Bjay ========");
         let ajay = keypair_gen(&rpc_client)?;
         let bjay = keypair_gen(&rpc_client)?;
-        println!("Generated Keypairs for Ajay and Bjay: {:?} and {:?}", ajay.pubkey(), bjay.pubkey());
+        println!(
+            "Generated Keypairs for Ajay and Bjay: {:?} and {:?}",
+            ajay.pubkey(),
+            bjay.pubkey()
+        );
         (ajay, bjay)
     };
 
     println!("\n======== Final Keypair Summary ========");
     println!("Ajay: {}", ajay.pubkey());
     println!("Bjay: {}", bjay.pubkey());
+
+    println!("\n======== Balances Summary ========");
+   
+    let ajay_sol: f64 = get_balance_or_airdrop_to(&rpc_client, &ajay.pubkey(), 1.0)?;
+    let bjay_sol: f64 = get_balance_or_airdrop_to(&rpc_client, &bjay.pubkey(), 1.0)?;
+
+    println!("Balances -> ajay: {ajay_sol} SOL, bjay: {bjay_sol} SOL");
 
     Ok(())
 }
