@@ -1,7 +1,7 @@
 mod helpers;
 
 use anyhow::Result;
-use helpers::{keypair_gen, load_keypair_from_file, lamports_to_sol, get_balance_or_airdrop_to};
+use helpers::{keypair_gen, load_keypair_from_file, lamports_to_sol, airdrop_to, transfer_to};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::signature::Signer;
 use std::env;
@@ -53,10 +53,12 @@ async fn main() -> Result<()> {
 
     println!("\n======== Balances Summary ========");
    
-    let ajay_sol: f64 = get_balance_or_airdrop_to(&rpc_client, &ajay.pubkey(), 1.0)?;
-    let bjay_sol: f64 = get_balance_or_airdrop_to(&rpc_client, &bjay.pubkey(), 1.0)?;
+    let ajay_sol: f64 = airdrop_to(&rpc_client, &ajay.pubkey(), 1.0)?;
+    let bjay_sol: f64 = airdrop_to(&rpc_client, &bjay.pubkey(), 1.0)?;
 
     println!("Balances -> ajay: {ajay_sol} SOL, bjay: {bjay_sol} SOL");
+
+    // transfer_to(&rpc_client, &ajay, &bjay.pubkey(), 1.0);
 
     Ok(())
 }

@@ -1,7 +1,10 @@
 use anyhow::Result;
 use serde_json;
 use solana_client::rpc_client::RpcClient;
+use solana_sdk::system_instruction;
 use solana_sdk::signature::{Keypair, Signer};
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::transaction::Transaction;
 use solana_sdk::native_token::LAMPORTS_PER_SOL;
 use solana_sdk::commitment_config::CommitmentConfig;
 use std::fs;
@@ -39,7 +42,7 @@ pub fn lamports_to_sol(lamports: u64) -> f64 {
     lamports as f64/1_000_000_000.0
 }
 
-pub fn get_balance_or_airdrop_to(client: &RpcClient, acc_pubkey: &solana_sdk::pubkey::Pubkey, amount_sol: f64) -> Result<f64> {
+pub fn airdrop_to(client: &RpcClient, acc_pubkey: &Pubkey, amount_sol: f64) -> Result<f64> {
 
     let mut lamports = client
         .get_balance_with_commitment(acc_pubkey, CommitmentConfig::finalized())?
@@ -65,3 +68,30 @@ pub fn get_balance_or_airdrop_to(client: &RpcClient, acc_pubkey: &solana_sdk::pu
 
     Ok(sol)
 }  
+
+pub fn transfer_to(client: &RpcClient, from: &Keypair, to: &Pubkey, amount_sol: f64) -> Result<()> {
+    println!("\n");
+
+    let blockhash = client.get_latest_blockhash()?;
+    let lamports = (amount_sol * LAMPORTS_PER_SOL as f64) as u64;
+
+    let instruction = system_instruction::transfer(&from.pubkey(), to, lamports);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction], 
+        Some(&from.pubkey()),
+        &[from], 
+        blockhash,
+    );
+
+    let sig = client.send_and_confirm_transaction_with_spinner_and_commitment(
+        &tx,
+        CommitmentConfig::finalized(),
+    );
+
+    println!("✅ Sent {} SOL from {} to {}", amount_sol, from.pubkey(), to);
+    println!("🔗 Tx Signature: {:?}", sig);
+    
+    Ok(())
+
+}
