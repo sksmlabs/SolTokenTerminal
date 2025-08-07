@@ -63,5 +63,7 @@ async fn main() -> Result<()> {
 
     // transfer_to(&rpc_client, &local, &ajay, &bjay.pubkey(), 1.0);
 
+    // Confidential txns
+
     Ok(())
 }
